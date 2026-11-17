@@ -1,0 +1,561 @@
+
+{% macro format_size(size) -%}
+    {% if size is none or size == '' %}
+        Unknown size
+    {% else %}
+        {% set bytes = size | int %}
+        {% if bytes < 1024 %}
+            {{ bytes }} B
+        {% elif bytes < 1048576 %}
+            {{ (bytes / 1024) | round(1) }} KB
+        {% elif bytes < 1073741824 %}
+            {{ (bytes / 1048576) | round(1) }} MB
+        {% else %}
+            {{ (bytes / 1073741824) | round(1) }} GB
+        {% endif %}
+    {% endif %}
+{%- endmacro %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Drive-to-Text | Document Extraction</title>
+
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+</head>
+
+<body>
+    <header class="hero">
+        <div class="container">
+            <h1>Drive-to-Text</h1>
+            <p>
+                Extract text from PDF documents and images
+                stored in a public Google Drive folder.
+            </p>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- Step 1: Connect to Google Drive -->
+        <section class="panel">
+            <h2>1. Connect to Google Drive</h2>
+
+            <form id="folder-form" action="/" method="get">
+                <label for="folder-url">
+                    Google Drive Folder URL
+                </label>
+
+                <div class="form-row">
+                    <input
+                        type="url"
+                        id="folder-url"
+                        name="folder_url"
+                        value="{{ folder_url | default('', true) }}"
+                        placeholder="https://drive.google.com/drive/folders/..."
+                        required
+                    >
+
+                    <button type="submit" id="list-files-button">
+                        Search Files
+                    </button>
+                </div>
+            </form>
+
+            <p id="status" role="status" aria-live="polite">
+                {% if drive_error %}
+                    Google Drive error: {{ drive_error }}
+                {% elif searched and not files %}
+                    No compatible PDF or image files found.
+                {% elif files %}
+                    {{ files | length }}
+                    {% if files | length == 1 %}file{% else %}files{% endif %}
+                    found.
+                {% endif %}
+            </p>
+        </section>
+
+        <!-- Step 2: Select documents -->
+        <section
+            class="panel"
+            id="file-section"
+            {% if not files %}hidden{% endif %}
+        >
+            <h2>2. Select Documents</h2>
+
+            <p>Select the documents you want to process.</p>
+
+            <form id="extract-form">
+
+                <!-- File selection toolbar -->
+                <div class="selection-toolbar">
+                    <label for="select-all">
+                        <input type="checkbox" id="select-all">
+                        Select All
+                    </label>
+
+                    <span id="selected-count" aria-live="polite">
+                        0 files selected out of 0 files
+                    </span>
+                </div>
+
+                <!-- List of available files -->
+                <div id="file-list" class="file-list">
+                    {% for file in files %}
+                    <label class="file-item">
+                        <input
+                            type="checkbox"
+                            name="file_id"
+                            value="{{ file.id }}"
+                            checked
+                        >
+
+                        <span>
+                            {{ file.name }} ({{ file.mimeType }})
+                            — {{ format_size(file.size if file.size is defined else none) }}
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <!-- OCR language selector -->
+                <div class="form-group">
+                    <label for="ocr-language">
+                        OCR Language
+                    </label>
+
+                    <select
+                        id="ocr-language"
+                        name="ocr_language"
+                        aria-describedby="ocr-language-help"
+                    >
+                        <option value="eng">English</option>
+                        <option value="fra">French</option>
+                        <option value="ara">Arabic (العربية)</option>
+                      
+                        </option>
+                    </select>
+
+                    <p id="ocr-language-help">
+                        Select the language used to recognize text
+                        in images and scanned PDF documents.
+                    </p>
+                </div>
+
+                <button type="submit" id="extract-button">
+                    Download and Extract Text
+                </button>
+            </form>
+        </section>
+
+        <!-- Step 3: Display extraction results -->
+        <section class="panel" id="results-section" hidden>
+            <div class="section-heading">
+                <h2>3. Extraction Results</h2>
+
+                <button type="button" id="export-button">
+                    Export as JSON
+                </button>
+            </div>
+
+            <div id="results-list"></div>
+        </section>
+
+    </main>
+
+    <footer class="container footer">
+        Drive-to-Text — PDF Text Extraction and OCR
+    </footer>
+
+    <!-- JavaScript is placed after the HTML elements -->
+    <script>
+        (() => {
+            console.log("Drive-to-Text: integrated script loaded.");
+
+            const folderForm =
+                document.getElementById("folder-form");
+
+            const folderUrlInput =
+                document.getElementById("folder-url");
+
+            const listButton =
+                document.getElementById("list-files-button");
+
+            const statusMessage =
+                document.getElementById("status");
+
+            const fileSection =
+                document.getElementById("file-section");
+
+            const fileList =
+                document.getElementById("file-list");
+
+            const selectAllCheckbox =
+                document.getElementById("select-all");
+
+            const selectedCountDisplay =
+                document.getElementById("selected-count");
+
+            const extractForm =
+                document.getElementById("extract-form");
+
+            const extractButton =
+                document.getElementById("extract-button");
+
+            // Read the selected OCR language.
+            const ocrLanguageSelect =
+                document.getElementById("ocr-language");
+
+            const resultsSection =
+                document.getElementById("results-section");
+
+            const resultsList =
+                document.getElementById("results-list");
+
+            const exportButton =
+                document.getElementById("export-button");
+
+            let latestResults = [];
+
+            function setStatus(message, isError = false) {
+                statusMessage.textContent = message;
+                statusMessage.classList.toggle("error", isError);
+            }
+
+            function pluralize(count, singular, plural) {
+                return count === 1 ? singular : plural;
+            }
+
+            function formatFileSize(size) {
+                if (
+                    size === null ||
+                    size === undefined ||
+                    size === ""
+                ) {
+                    return "Unknown size";
+                }
+
+                const bytes = Number(size);
+
+                if (!Number.isFinite(bytes) || bytes < 0) {
+                    return "Unknown size";
+                }
+
+                if (bytes < 1024) {
+                    return `${bytes} B`;
+                }
+
+                if (bytes < 1048576) {
+                    return `${(bytes / 1024).toFixed(1)} KB`;
+                }
+
+                if (bytes < 1073741824) {
+                    return `${(bytes / 1048576).toFixed(1)} MB`;
+                }
+
+                return `${(bytes / 1073741824).toFixed(1)} GB`;
+            }
+
+            // Update the selected-files counter.
+            function updateSelectionState() {
+                const checkboxes = Array.from(
+                    fileList.querySelectorAll(
+                        'input[name="file_id"]'
+                    )
+                );
+
+                const selectedCount = checkboxes.filter(
+                    checkbox => checkbox.checked
+                ).length;
+
+                const selectedWord =
+                    pluralize(selectedCount, "file", "files");
+
+                const totalWord =
+                    pluralize(checkboxes.length, "file", "files");
+
+                selectedCountDisplay.textContent =
+                    `${selectedCount} ${selectedWord} selected ` +
+                    `out of ${checkboxes.length} ${totalWord}`;
+
+                selectAllCheckbox.checked =
+                    checkboxes.length > 0 &&
+                    selectedCount === checkboxes.length;
+
+                selectAllCheckbox.indeterminate =
+                    selectedCount > 0 &&
+                    selectedCount < checkboxes.length;
+            }
+
+            // Select or deselect all files.
+            selectAllCheckbox.addEventListener("change", () => {
+                const checkboxes = fileList.querySelectorAll(
+                    'input[name="file_id"]'
+                );
+
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
+
+                updateSelectionState();
+            });
+
+            // Update the counter when an individual file is selected.
+            fileList.addEventListener("change", event => {
+                if (
+                    event.target.matches(
+                        'input[name="file_id"]'
+                    )
+                ) {
+                    updateSelectionState();
+                }
+            });
+
+            // Send JSON requests to the FastAPI backend.
+            async function postJson(url, payload) {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    const message =
+                        typeof data.detail === "string"
+                            ? data.detail
+                            : `HTTP error ${response.status}`;
+
+                    throw new Error(message);
+                }
+
+                return data;
+            }
+
+            // Step 1: Search for files in Google Drive.
+            folderForm.addEventListener("submit", async event => {
+                event.preventDefault();
+
+                console.log("Google Drive search form submitted.");
+
+                const folderUrl = folderUrlInput.value.trim();
+
+                if (!folderUrl) {
+                    setStatus(
+                        "Please enter a Google Drive folder URL.",
+                        true
+                    );
+                    return;
+                }
+
+                listButton.disabled = true;
+                fileSection.hidden = true;
+                resultsSection.hidden = true;
+                latestResults = [];
+
+                setStatus("Searching for files...");
+
+                try {
+                    const data = await postJson("/api/files", {
+                        folder_url: folderUrl
+                    });
+
+                    fileList.replaceChildren();
+
+                    if (!Array.isArray(data.files)) {
+                        throw new Error(
+                            "The API response does not contain a valid file list."
+                        );
+                    }
+
+                    if (data.files.length === 0) {
+                        updateSelectionState();
+
+                        setStatus(
+                            "No compatible PDF or image files found."
+                        );
+                        return;
+                    }
+
+                    for (const file of data.files) {
+                        const label = document.createElement("label");
+                        label.className = "file-item";
+
+                        const checkbox =
+                            document.createElement("input");
+
+                        checkbox.type = "checkbox";
+                        checkbox.name = "file_id";
+                        checkbox.value = file.id;
+                        checkbox.checked = true;
+
+                        const description =
+                            document.createElement("span");
+
+                        description.textContent =
+                            `${file.name} (${file.mime_type}) — ` +
+                            formatFileSize(file.size);
+
+                        label.append(checkbox, description);
+                        fileList.appendChild(label);
+                    }
+
+                    updateSelectionState();
+                    fileSection.hidden = false;
+
+                    setStatus(
+                        `${data.files.length} ` +
+                        `${pluralize(data.files.length, "file", "files")} found.`
+                    );
+
+                } catch (error) {
+                    console.error("Google Drive search error:", error);
+                    setStatus(`Error: ${error.message}`, true);
+
+                } finally {
+                    listButton.disabled = false;
+                }
+            });
+
+            // Step 2: Extract text from the selected documents.
+            extractForm.addEventListener("submit", async event => {
+                event.preventDefault();
+
+                const selectedIds = Array.from(
+                    fileList.querySelectorAll(
+                        'input[name="file_id"]:checked'
+                    )
+                ).map(checkbox => checkbox.value);
+
+                if (selectedIds.length === 0) {
+                    setStatus(
+                        "Please select at least one document.",
+                        true
+                    );
+                    return;
+                }
+
+                extractButton.disabled = true;
+                resultsSection.hidden = true;
+
+                setStatus(
+                    `Extracting ${selectedIds.length} ` +
+                    `${pluralize(selectedIds.length, "file", "files")}...`
+                );
+
+                try {
+                    const data = await postJson("/api/extract", {
+                        folder_url: folderUrlInput.value.trim(),
+                        file_ids: selectedIds,
+                        ocr_language: ocrLanguageSelect.value
+                    });
+
+                    latestResults = data.results || [];
+                    renderResults(latestResults);
+
+                    resultsSection.hidden = false;
+
+                    const errorCount = latestResults.filter(
+                        result => result.status === "error"
+                    ).length;
+
+                    setStatus(
+                        `Processing complete: ${latestResults.length} ` +
+                        `${pluralize(latestResults.length, "file", "files")}, ` +
+                        `${errorCount} ${pluralize(errorCount, "error", "errors")}.`
+                    );
+
+                } catch (error) {
+                    console.error("Extraction error:", error);
+                    setStatus(`Error: ${error.message}`, true);
+
+                } finally {
+                    extractButton.disabled = false;
+                }
+            });
+
+            // Step 3: Display each extraction result.
+            function renderResults(results) {
+                resultsList.replaceChildren();
+
+                for (const result of results) {
+                    const card = document.createElement("article");
+                    card.className = "result-card";
+
+                    const title = document.createElement("h3");
+                    title.textContent = result.file_name;
+                    card.appendChild(title);
+
+                    const status = document.createElement("p");
+
+                    if (result.status === "success") {
+                        status.textContent = "Extraction successful";
+                        status.className = "success";
+
+                    } else if (result.status === "empty") {
+                        status.textContent = "No text detected";
+                        status.className = "warning";
+
+                    } else {
+                        status.textContent =
+                            `Error: ${result.error || "Unknown error"}`;
+
+                        status.className = "error";
+                    }
+
+                    card.appendChild(status);
+
+                    if (result.text) {
+                        const output = document.createElement("pre");
+                        output.textContent = result.text;
+                        card.appendChild(output);
+                    }
+
+                    resultsList.appendChild(card);
+                }
+            }
+
+            // Step 4: Export results as a JSON file.
+            exportButton.addEventListener("click", () => {
+                if (latestResults.length === 0) {
+                    setStatus("There are no results to export.", true);
+                    return;
+                }
+
+                const blob = new Blob(
+                    [JSON.stringify(latestResults, null, 2)],
+                    {
+                        type: "application/json;charset=utf-8"
+                    }
+                );
+
+                const downloadUrl = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+
+                link.href = downloadUrl;
+                link.download = "drive-to-text-results.json";
+
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+
+                setTimeout(
+                    () => URL.revokeObjectURL(downloadUrl),
+                    1000
+                );
+            });
+
+            // Initialize the selection counter on page load.
+            updateSelectionState();
+        })();
+    </script>
+</body>
+</html>
+
