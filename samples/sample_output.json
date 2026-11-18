@@ -1,0 +1,34 @@
+[
+  {
+    "file_id": "1MHY3YkmsCfbhCqNvdwdWoefU-v48poJ0",
+    "file_name": "une_histoire_scann%C3%A9e_pour_ocr.pdf",
+    "mime_type": "application/pdf",
+    "method": "OCR",
+    "status": "success",
+    "text": "La Lettre Perdue\nUne courte histoire pour tester la reconnaissance de texte (OCR)\nChapitre 1 — La découverte\nUn matin de novembre, Lina trouva une vieille enveloppe sous la porte de la\npetite librairie de son grand-pére. Son nom était écrit a la main sur le devant,\nmais aucune adresse ne figurait au dos. Curieuse, elle ouvrit l'enveloppe et\ndécouvrit une carte dessinée a I'encre bleue.\nLa carte indiquait le chemin vers une maison abandonnée, au bord d'un lac\nentouré de cyprés. Au-dessous du dessin, une phrase était écrite : « Certaines\nréponses n'apparaissent qu'a ceux qui prennent le temps d'écouter. » Lina\nglissa la carte dans son sac et décida de partir aprés la fermeture de la librairie.\nChapitre 2 — La maison au bord du lac\nLe sentier était étroit et couvert de feuilles humides. A mesure qu'elle avancait,\nLina entendait le vent passer entre les arbres et le bruit régulier de l'eau contre\nles pierres. La maison semblait vide, pourtant une petite lumiére brillait derriére\nune fenétre.\n\nPagel\n\nLa Lettre Perdue\nSuite de l'histoire\nA l'intérieur, elle trouva une boite en bois contenant plusieurs lettres, toutes\nadressées & son grand-pére. Elles racontaient l'histoire d'une amitié\ninterrompue par un malentendu, puis oubliée pendant des décennies. Lina\ncomprit que la carte n'était pas un trésor, mais une invitation a rétablir un lien\nancien.\nChapitre 3 — Une nouvelle rencontre\nLe lendemain, Lina remit les lettres a son grand-pére. II resta silencieux\nquelques instants, puis sourit avec émotion. Il expliqua qu'il avait perdu contact\navec son meilleur ami aprés une dispute dont aucun des deux n'avait vraiment\ncompris la cause.\nEnsemble, ils retrouvérent I'adresse de |'ami et lui écrivirent. Une semaine plus\ntard, une réponse arriva : l'homme acceptait de les rencontrer. Ce jour-la, Lina\napprit qu'un simple geste pouvait réparer ce que le temps avait laissé se briser.\nDans la librairie, une nouvelle lettre attendait déja quelqu'un qui en avait\nbesoin. Lina la posa prés de la fenétre, avec le sourire de ceux qui savent\nqu'une petite découverte peut changer beaucoup de choses.\nFin — Document fictif. Cette page est une image : le texte n'est pas sélectionnable.\n\nPage2"
+  },
+  {
+    "file_id": "1RtD9h3JqZVHgzqK7m5CGxr_FKRWj5Ejz",
+    "file_name": "citation_arabe_simple.jpg",
+    "mime_type": "image/jpeg",
+    "method": "OCR",
+    "status": "success",
+    "text": "nd putt Re Cy!\n6 Asie pal dy qu"
+  },
+  {
+    "file_id": "1hwcmWLL55_lSqhxQyfWd24ondDXHO0yx",
+    "file_name": "sample_image.png",
+    "mime_type": "image/png",
+    "method": "OCR",
+    "status": "success",
+    "text": "Believe in yourself.\n— You are stronger\nes S : = — Unknown —"
+  },
+  {
+    "file_id": "1q_h9v6uzD6o2gs580yrbm1D_lzyEcFfF",
+    "file_name": "sample_document.pdf",
+    "mime_type": "application/pdf",
+    "method": "PDF parser",
+    "status": "success",
+    "text": "Fichier PDF d'exemple \nLe Portable Document Format (qui se traduit de l'anglais en « format de document \nportable »), généralement abrégé PDF, est un format de fichier informatique créé par \nAdobe  Systems.  C'est  un  format  ouvert  dont  les  spécifications  sont  publiques  et \nutilisables librement (certains éléments sont à disposition sur le site Adobe). Il est \ndérivé du format PostScript et contient des données au format XML.\nLe format PDF est un format de fichier qui préserve les polices, les images, les objets \ngraphiques et la mise en forme de tout document source, quelles que soient l'application \net la plate-forme utilisées pour le créer. Les fichiers PDF peuvent être créés avec des \noptions personnalisées, tant aux niveaux de la compression des images et des textes, \nde la qualité d'impression du fichier, ainsi que du verrouillage (interdiction d'impression, \nde modification...).\nLe format PDF n'est pas un format statique mais un format interactif. Il est en effet \npossible  (grâce  à  Acrobat  Pro)  d'incorporer  des  champs  de  textes,  des  menus \ndéroulants, des choix, des calculs... sur un document universel PDF : on parle alors de \nformulaire PDF.\nLe PDF est consultable sur de très nombreux appareils communicants (ordinateurs, \nassistants personnels numériques / PDA, nouveaux téléphones hybrides...). En effet, le \nlecteur  gratuit,  nommé  «  Adobe  Reader  »  est disponible  sur  de  très  nombreuses \nplateformes et systèmes d'exploitations : Mac OS, Windows, Linux, Palm OS, Pocket PC, \nSymbian OS, Sun Solaris Sparc, IBM AIX, HP-UX, OS/2 / Warp... De nombreux autes \nlecteurs dont certains sont des logiciels libres, existent également. La génération de \ndocuments dans ce format est possible à l'aide de logiciels spécialisés, d'imprimantes \nvirtuelles  mais  elle  est  également  possible  automatiquement  dans  certaines  suites \nbureautiques.  C'est  ainsi  que  ce  format  universel  est  considéré  comme  le  format \nmondial d'échange (et d'archivage) de documents électroniques.\nIl existe des variantes du format PDF de base, dit PDF 1.3 ou 1.4, des versions « \nrastérisées » (la rastérisation consiste à transformer les textes modifiables en images \nmatricielles figées accompagnées des images d'illustration) dites PDF-IT et PDF-X. Cette \nversion est principallement utilisée dans l'industrie graphique lors de la séparation des \ncouleurs en quadrichromie, au niveau du RIP.\nUne nouvelle forme de fichiers PDF voit actuellement le jour. Dans ce dernier, le fichier \nimage du texte est transformé en vecteurs au lieu d'un fichier bitmap, ce qui permet \nl'allégement du fichier ainsi que la capacité d'être agrandi à l'envie."
+  }
+]

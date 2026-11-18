@@ -1,6 +1,7 @@
 
 from pathlib import Path
 import re
+import shutil
 
 import pytesseract
 from PIL import (
@@ -11,11 +12,21 @@ from PIL import (
 )
 
 
-# Chemin de Tesseract sous Windows.
-pytesseract.pytesseract.tesseract_cmd = (
-    r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-)
+# Use Tesseract from PATH when available (Windows and Linux).
+tesseract_executable = shutil.which("tesseract")
 
+if tesseract_executable:
+    pytesseract.pytesseract.tesseract_cmd = tesseract_executable
+else:
+    # Fallback for the standard Windows installation path.
+    windows_tesseract = Path(
+        r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    )
+
+    if windows_tesseract.is_file():
+        pytesseract.pytesseract.tesseract_cmd = str(
+            windows_tesseract
+        )
 
 class OCRExtractionError(Exception):
     """Raised when text cannot be extracted from an image."""
