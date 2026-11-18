@@ -404,14 +404,31 @@ The project follows the assessment’s preference for Conventional Commits and f
 
 Examples of commit messages:
 
-```text
-feat(drive): list supported files from public folders
-feat(ocr): add image text extraction
-fix(pdf): handle scanned PDFs without usable text
-test(extraction): cover PDF and OCR routing
-build(docker): add Docker Compose support
-docs(readme): document setup and Docker usage
-```
+The project was developed incrementally using feature-oriented commits to separate the main implementation steps.
+
+| Commit | Contribution |
+|---|---|
+| `feat(drive): list files from public folder` | Initial implementation of public Google Drive folder file listing |
+| `feat(parser): extract text from PDF files` | PDF text extraction |
+| `feat(ocr): add image text extraction` | OCR support for image documents |
+| `fix(parser): handle empty PDF pages` | Improved handling of empty PDF pages |
+| `test: add document extraction verification scripts` | Added document extraction verification scripts |
+| `feat(ui): add document selection and JSON export` | Added file selection and JSON export to the web interface |
+| `build(docker): add Docker Compose support` | Added Dockerfile and Docker Compose configuration, together with project documentation, licensing information, and sample files |
+
+The implementation is organized into separate components for document retrieval, PDF processing, OCR, API endpoints, and the web interface. Automated tests help verify the main extraction and error-handling paths.
+
+## Assessment Bonus Checklist
+
+| Requirement | Status |
+|---|---|
+| Scanned PDF detection and OCR fallback | Implemented and covered by an automated test |
+| Docker and Docker Compose | Implemented and tested |
+| Automated tests | 17 tests passed in the latest reported local and Docker runs |
+| OCR language selection | Verify the complete interface-to-backend workflow before claiming completion |
+| Asynchronous processing with live progress | Confirm implementation and test results before claiming completion |
+
+Only mark a bonus as completed when the corresponding behavior has been implemented and verified. The number of passing tests alone does not establish that every bonus is complete.
 
 Use small, focused commits that explain the evolution of the project. Keep virtual environments, caches, generated files, and secrets out of Git.
 
